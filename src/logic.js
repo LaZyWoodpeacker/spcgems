@@ -1,4 +1,4 @@
-class Gems {
+export class Gems {
     constructor(mock, makeobj) {
         this.list = this.parseMokc(mock, makeobj)
         this.weight = mock[0].length
@@ -72,16 +72,15 @@ class Gems {
 }
 
 
-const mock3x3 = [
+export const mock3x3 = [
     [3, 1, 1],
     [1, 2, 1],
     [3, 1, 3]
 ]
-const mock5x5 = [
+export const mock5x5 = [
     [3, 1, 1, 2, 3],
     [3, 1, 1, 2, 3],
     [3, 1, 1, 2, 3],
     [3, 1, 1, 2, 3],
     [3, 1, 1, 2, 3]
 ]
-module.exports = { Gems, mock3x3, mock5x5 }
