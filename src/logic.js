@@ -58,16 +58,30 @@ class Gems {
         this.list.forEach(em => {
             if (!payload[em.y]) payload[em.y] = []
             payload[em.y][em.x] = em.t
-            dr(em)
         })
         console.log(JSON.stringify(payload, null, 4))
+    }
+    CheckCur(obj, func = () => true) {
+        return this.list.filter(e => {
+            if ((e.x == obj.data.values.x || e.x == obj.data.values.x) && (e.y == obj.data.values.y + 1 || e.y == obj.data.values.y - 1)) { return true }
+            else if ((e.x == obj.data.values.x + 1 || e.x == obj.data.values.x - 1) && (e.y == obj.data.values.y || e.y == obj.data.values.y)) { return true }
+            else if ((e.x == obj.data.values.x + 1 || e.x == obj.data.values.x - 1) && (e.y == obj.data.values.y + 1 || e.y == obj.data.values.y - 1)) { return true }
+            else { return false }
+        })
     }
 }
 
 
 const mock3x3 = [
-    [0, 1, 1],
+    [3, 1, 1],
     [1, 2, 1],
-    [0, 1, 0]
+    [3, 1, 3]
 ]
-module.exports = { Gems, mock3x3 }
+const mock5x5 = [
+    [3, 1, 1, 2, 3],
+    [3, 1, 1, 2, 3],
+    [3, 1, 1, 2, 3],
+    [3, 1, 1, 2, 3],
+    [3, 1, 1, 2, 3]
+]
+module.exports = { Gems, mock3x3, mock5x5 }
