@@ -15,7 +15,7 @@ export default class MainScene extends Phaser.Scene {
 
         this.scoreText = this.add.text(5, 5, ['0'])
         this.s = new Gems(mock3x3, (x, y, c) => {
-            let rect = this.add.rectangle(0, 0, boxWidth - 2, boxWidth - 2, colors[c]);
+            let rect = this.add.rectangle(Phaser.Math.Between(-300, 300), Phaser.Math.Between(-300, 300), boxWidth - 2, boxWidth - 2, colors[c]);
             rect
                 .setOrigin(0)
                 .setInteractive()
