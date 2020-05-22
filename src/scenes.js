@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { Gems, mock3x3, mock5x5 } from './logic'
+import { Gems, mock3x3, mock5x5, test } from './logic'
 
 export default class MainScene extends Phaser.Scene {
     constructor() {
@@ -7,6 +7,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     preload() {
+        console.table(test(mock3x3))
     }
 
     create() {

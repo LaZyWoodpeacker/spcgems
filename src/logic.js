@@ -84,3 +84,20 @@ export const mock5x5 = [
     [3, 1, 1, 2, 3],
     [3, 1, 1, 2, 3]
 ]
+
+export function test(mock3x3) {
+    let payload = []
+    const height = mock3x3.length
+    const weight = mock3x3[0].length
+    let firstElement = mock3x3[0][0] //adress
+    for (let y = 1; y < height; y++) {
+        let count = 1
+        mock3x3[y].forEach((line, i) => {
+            while (firstElement) {
+                line[i + 1] == line[i]
+                firstElement = null
+            }
+        })
+    }
+    return payload;
+}
