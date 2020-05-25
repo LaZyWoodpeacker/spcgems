@@ -4,8 +4,8 @@ import MainScene from './scenes'
 const config = {
   type: Phaser.AUTO,
   parent: "phaser-example",
-  width: 350,
-  height: 400,
+  width: 750,
+  height: 775,
   physics: {
     default: 'arcade',
     arcade: {

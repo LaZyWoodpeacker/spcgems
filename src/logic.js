@@ -73,31 +73,67 @@ export class Gems {
 
 
 export const mock3x3 = [
-    [3, 1, 1],
+    [1, 1, 1],
     [1, 2, 1],
     [3, 1, 3]
 ]
 export const mock5x5 = [
-    [3, 1, 1, 2, 3],
-    [3, 1, 1, 2, 3],
-    [3, 1, 1, 2, 3],
-    [3, 1, 1, 2, 3],
-    [3, 1, 1, 2, 3]
+    [1, 1, 2, 3, 1, 3, 3],
+    [1, 1, 3, 3, 3, 3, 1],
+    [1, 1, 1, 3, 3, 3, 1],
+    [3, 1, 1, 2, 3, 3, 1],
+    [2, 2, 1, 2, 2, 3, 1],
+    [3, 2, 2, 2, 2, 1, 1],
+    [2, 2, 3, 1, 2, 1, 3]
 ]
 
-export function test(mock3x3) {
+export function test(mock, fn = (hor, s, c, t) => console.log({ hor, s, c, t })) {
     let payload = []
-    const height = mock3x3.length
-    const weight = mock3x3[0].length
-    let firstElement = mock3x3[0][0] //adress
-    for (let y = 1; y < height; y++) {
+    const height = mock.length
+    const weight = mock[0].length
+    //horisontals
+    for (let y = 0; y < height; y++) {
+        console.log("process:", y)
         let count = 1
-        mock3x3[y].forEach((line, i) => {
-            while (firstElement) {
-                line[i + 1] == line[i]
-                firstElement = null
+        for (let x = 1; x < weight; x++) {
+            if (mock[y][x - 1] == mock[y][x]) {
+                count++
             }
-        })
+            else {
+                if (count > 2) {
+                    // payload.push({ y, x: x - count, x2: x })
+                    fn(true, x - count, count, mock[y][x])
+                }
+                count = 1
+            }
+        }
+        if (count > 2) {
+            // payload.push({ y, x: weight - count, x2: weight })
+            fn(true, weight - count, count, mock[y][weight])
+        }
+    }
+    //verticles
+    for (let x = 0; x < weight; x++) {
+        console.log("process:", x)
+        let count = 1
+        for (let y = 1; y < height; y++) {
+            if (mock[y - 1][x] == mock[y][x]) {
+                count++
+            }
+            else {
+                if (count > 2) {
+                    // console.log({ x, y, ys: y - count, count })
+                    // payload.push({ x, y, ys: y - count })
+                    fn(false, y - count, count, mock[y][x])
+                }
+                count = 1
+            }
+        }
+        if (count > 2) {
+            // console.log({ x, y: height, ys: height - count, count })
+            // payload.push({ x, y: height, ys: height - count })
+            fn(true, height - count, count, mock[height - 1][x])
+        }
     }
     return payload;
 }

@@ -7,7 +7,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     preload() {
-        console.table(test(mock3x3))
+
     }
 
     create() {
@@ -15,7 +15,7 @@ export default class MainScene extends Phaser.Scene {
         const colors = [0x6666ff, 0xff0000, 0x00ff00, 0x0000ff];
 
         this.scoreText = this.add.text(5, 5, ['0'])
-        this.s = new Gems(mock3x3, (x, y, c) => {
+        this.s = new Gems(mock5x5, (x, y, c) => {
             let rect = this.add.rectangle(Phaser.Math.Between(-300, 300), Phaser.Math.Between(-300, 300), boxWidth - 2, boxWidth - 2, colors[c]);
             rect
                 .setOrigin(0)
@@ -65,5 +65,6 @@ export default class MainScene extends Phaser.Scene {
             });
             return rect
         })
+        console.log(test(mock5x5))
     }
 }
