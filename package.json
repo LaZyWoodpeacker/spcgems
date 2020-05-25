@@ -1,7 +1,7 @@
 {
-  "name": "phaser3-project-template",
+  "name": "spcgems",
   "version": "0.0.1",
-  "description": "A Phaser 3 Project Template",
+  "description": "Spcprit puzzle",
   "main": "src/index.js",
   "scripts": {
     "build": "webpack --config prod.js ",

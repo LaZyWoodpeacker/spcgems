@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { Gems, mock3x3, mock5x5, test } from './logic'
+import { mock3x3, mock5x5, test, makeFild, testMoves } from './logic'
 
 export default class MainScene extends Phaser.Scene {
     constructor() {
@@ -11,12 +11,12 @@ export default class MainScene extends Phaser.Scene {
     }
 
     create() {
-        const boxWidth = 100
+        const boxWidth = 50
         const colors = [0x6666ff, 0xff0000, 0x00ff00, 0x0000ff];
+        this.scoreText = this.add.text(25, 12, ['0'])
 
-        this.scoreText = this.add.text(5, 5, ['0'])
-        this.s = new Gems(mock5x5, (x, y, c) => {
-            let rect = this.add.rectangle(Phaser.Math.Between(-300, 300), Phaser.Math.Between(-300, 300), boxWidth - 2, boxWidth - 2, colors[c]);
+        this.s = makeFild(mock5x5, (x, y, c) => {
+            let rect = this.add.rectangle(Phaser.Math.Between(-500, 500), Phaser.Math.Between(-500, 500), boxWidth - 2, boxWidth - 2, colors[c]);
             rect
                 .setOrigin(0)
                 .setInteractive()
@@ -41,30 +41,14 @@ export default class MainScene extends Phaser.Scene {
                     });
                     this.input.on('pointerup', function (pointer, obj) {
                         let r = obj[0]
-                        this.scene.s.list.forEach(e => {
-                            if (e !== r) {
-                                e.o.setData('clicked', false)
-                                e.o.setAlpha(1)
-                            }
-                        })
-                        this.scene.s.CheckCur(r).forEach(e => {
-                            e.o.setAlpha(.3)
-                        })
-                        if (r.getData('clicked')) {
-                            r
-                                .setData('clicked', false)
-                                .setAlpha(1)
-                        }
-                        else {
-                            r
-                                .setData('clicked', true)
-                                .setAlpha(.5)
-                        }
+                        console.log(testMoves(mock5x5, r.data.values.x, r.data.values.y))
+                        this.scene.scoreText.setText([r.data.values.x + ' ' + r.data.values.y])
+
                     })
                 },
             });
             return rect
         })
-        console.log(test(mock5x5))
+        // console.log(test(mock5x5))
     }
 }
