@@ -4,16 +4,32 @@ export const mock3x3 = [
     [3, 1, 3]
 ]
 export const mock5x5 = [
-    [1, 0, 1, 1, 0, 0, 0],
-    [0, 1, 0, 1, 1, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 0, 0],
+    [1, 2, 1, 1, 2, 2, 3],
+    [2, 1, 2, 1, 1, 3, 3],
+    [1, 2, 2, 0, 0, 0, 0],
+    [1, 2, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0]
 ]
 
-function testFild(mock, fn = (ob) => console.log) {
+export function moveGems(mock, objFrom, objTo, fn = (mock, objFrom, objTo) => console.log) {
+    const cords = (x, y) => mock[y][x]
+    let from = cords(objFrom[0], objFrom[1])
+    let to = cords(objTo[0], objTo[1])
+    mock[objTo[1]][objTo[0]] = from
+    mock[objFrom[1]][objFrom[0]] = to
+    return fn(mock, objFrom, objTo)
+}
+
+export function testFild(mock, fn = (ob) => console.log) {
+    const cords = (x, y) => mock[y][x]
+    const height = mock.length
+    const weight = mock[0].length
+    let fromX = 0
+    let fromY = 0
+    let toX = weight
+    let toY = height
     const payload = []
     for (let y = fromY; y < toY; y++) {
         let fr = cords(fromX, y)
@@ -25,14 +41,14 @@ function testFild(mock, fn = (ob) => console.log) {
             }
             else {
                 if (count > 2) {
-                    fn({ count, t: fr })
+                    fn({ n: false, y, x, count, t: fr })
                 }
                 fr = frto
                 count = 1
             }
         }
         if (count > 2) {
-            fn({ count, t: fr })
+            fn({ n: false, y, x: toX, count, t: fr })
         }
     }
     for (let x = fromX; x < toX; x++) {
@@ -45,17 +61,21 @@ function testFild(mock, fn = (ob) => console.log) {
             }
             else {
                 if (count > 2) {
-                    fn({ count, t: fr })
+                    fn({ n: true, x, y, count, t: fr })
                 }
                 fr = frto
                 count = 1
             }
         }
         if (count > 2) {
-            fn({ count, t: fr })
+            fn({ n: true, x, y: toY, count, t: fr })
         }
     }
     return payload.filter(e => e.t != 0)
+}
+
+export function scoreFild(mock, fn = (ob) => console.log) {
+    return fn(mock)
 }
 
 function testMove(mock, fromX, fromY, toX, toY, x1, y1, x2, y2) {
@@ -135,12 +155,6 @@ export function testMoves(mock, x, y, fn = (type, x, y, c) => console.log) {
         up: y > 0,
         down: y < height - 1
     }
-    // const gems = []
-    // for (let y = fromY; y < toY; y++)
-    //     for (let x = fromX; x < toX; x++) {
-    //         gems.push([x, y])
-    //     }
-
     if (moves.right) {
         moves.right = testMove(mock, fromX, fromY, toX, toY, x, y, x + 1, y)
     }
