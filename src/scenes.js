@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { mock3x3, mock5x5, test, makeFild, testMoves, testFild, moveGems, scoreFild } from './logic'
+import { mock3x3, mock5x5, test, makeFild, testMoves, testFild, moveGems, scoreFild, fallGemes } from './logic'
 
 export default class MainScene extends Phaser.Scene {
     constructor() {
@@ -31,7 +31,6 @@ export default class MainScene extends Phaser.Scene {
         this.input.on('gameobjectdown', function (pointer, obj) {
             let r = obj
             let g = this.scene
-
             const drawPosable = (sel, redraw = false) => {
                 let moves = testMoves(mock5x5, sel[0], sel[1])
                 if (redraw) {
@@ -108,16 +107,55 @@ export default class MainScene extends Phaser.Scene {
                                                     destroyRect(rect)
                                                 }
                                             }
-                                            console.log(mock5x5)
                                         }
                                     })
+                                    let ems = fallGemes(mock5x5)
+                                    for (let x = 0; x < mock5x5[0].length; x++) {
+                                        for (let y = mock5x5.length - 1; y > ems.hat[x].length; y--) {
+                                            if (ems.hat[x].length > 0) {
+                                                let gem = ems.hat[x].pop()
+                                                moveGems(mock5x5, [gem.x, gem.y], [x, y], (mock, objFrom, objTo) => {
+                                                    let from = g.gete(objFrom[0], objFrom[1])
+                                                    let to = g.gete(objTo[0], objTo[1])
+                                                    s.tweens.timeline({
+                                                        ease: "Sine.easeInOut",
+                                                        yoyo: false,
+                                                        loop: 0,
+                                                        duration: 200,
+                                                        tweens: [
+                                                            {
+                                                                targets: from.o,
+                                                                x: to.o.x,
+                                                                y: to.o.y
+                                                            }, {
+                                                                targets: to.o,
+                                                                x: from.o.x,
+                                                                y: from.o.y
+                                                            }],
+                                                        onComplete: () => {
+                                                            from.x = objTo[0]
+                                                            from.y = objTo[1]
+                                                            from.o.setData('x', objTo[0])
+                                                            from.o.setData('y', objTo[1])
+                                                            from.o.setData('t', mock[objTo[1]][objTo[0]])
+                                                            to.x = objFrom[0]
+                                                            to.y = objFrom[1]
+                                                            to.o.setData('x', objFrom[0])
+                                                            to.o.setData('y', objFrom[1])
+                                                            to.o.setData('t', mock[objFrom[1]][objFrom[0]])
+                                                        }
+                                                    })
+                                                })
+                                            }
+                                        }
+                                    }
+                                    console.log(mock5x5)
                                 },
                                 tweens: [
                                     {
                                         targets: from.o,
                                         x: to.o.x,
                                         y: to.o.y
-
                                     }, {
                                         targets: to.o,
                                         x: from.o.x,
