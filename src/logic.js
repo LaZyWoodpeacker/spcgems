@@ -6,12 +6,16 @@ export const mock3x3 = [
 export const mock5x5 = [
     [1, 2, 2, 1, 2, 2, 3],
     [1, 0, 2, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0, 2, 0],
-    [1, 0, 0, 0, 0, 1, 0],
+    [2, 0, 0, 0, 0, 2, 0],
+    [3, 0, 0, 0, 0, 1, 0],
     [0, 0, 0, 0, 0, 3, 0],
     [0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0]
 ]
+
+export function makeNew(mock) {
+
+}
 
 export function moveGems(mock, objFrom, objTo, fn = (mock, objFrom, objTo) => console.log) {
     const cords = (x, y) => mock[y][x]
@@ -174,6 +178,7 @@ export function fallGemes(mock) {
     const cords = (x, y) => mock[y][x]
     const height = mock.length
     const weight = mock[0].length
+    let hatMove = false
     const hat = []
     const empty = []
     for (let x = 0; x < weight; x++) {
@@ -181,6 +186,7 @@ export function fallGemes(mock) {
         empty[x] = []
         for (let y = 0; y < height; y++) {
             if (cords(x, y) == 0) {
+                hatMove = true
                 empty[x].push({ x, y, t: cords(x, y) })
             }
             else {
@@ -189,5 +195,5 @@ export function fallGemes(mock) {
         }
 
     }
-    return { hat, empty }
+    return { hat, empty, hatMove }
 }

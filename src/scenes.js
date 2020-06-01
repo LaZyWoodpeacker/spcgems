@@ -1,6 +1,7 @@
 import Phaser from "phaser";
-import { mock3x3, mock5x5, test, makeFild, testMoves, testFild, moveGems, scoreFild, fallGemes } from './logic'
+import { mock3x3, mock5x5, test, makeFild, testMoves, testFild, moveGems, scoreFild, fallGemes, makeNew } from './logic'
 
+const emitter = new Phaser.Events.EventEmitter()
 export default class MainScene extends Phaser.Scene {
     constructor() {
         super()
@@ -15,12 +16,119 @@ export default class MainScene extends Phaser.Scene {
         return this.s.find(e => e.x == x && e.y == y)
     }
 
+    printField(mock, fn = (em) => em.t) {
+        const payload = []
+        for (let y = 0; y < mock.length; y++) {
+            let horis = []
+            for (let x = 0; x < mock[0].length; x++) {
+                let em = this.gete(x, y)
+                horis.push(fn(em))
+            }
+            payload.push(horis)
+        }
+        console.log(payload)
+        return payload
+    }
+
+    redraw() {
+        let s = this
+        let hatMove = true
+        const boxWidth = 50
+        const colors = [0x6666ff, 0xff0000, 0x00ff00, 0x0000ff];
+        while (hatMove) {
+            let ems = fallGemes(mock5x5)
+            let tweens = []
+            if (ems.hatMove) {
+                for (let x = 0; x < mock5x5[0].length; x++) {
+                    for (let y = mock5x5.length - 1; y > -1; y--) {
+                        if (ems.hat[x].length > 0) {
+                            let gem = ems.hat[x].pop()
+                            moveGems(mock5x5, [gem.x, gem.y], [x, y], (mock5x5, objFrom, objTo) => {
+                                let from = s.gete(objFrom[0], objFrom[1])
+                                let to = s.gete(objTo[0], objTo[1])
+                                tweens.push({
+                                    targets: from.o,
+                                    x: x * boxWidth + 25,
+                                    y: y * boxWidth + 50,
+                                })
+                                from.x = objTo[0]
+                                from.y = objTo[1]
+                                from.o.setData('x', objTo[0])
+                                from.o.setData('y', objTo[1])
+                                from.o.setData('t', mock5x5[objTo[1]][objTo[0]])
+                                to.x = objFrom[0]
+                                to.y = objFrom[1]
+                                to.o.setData('x', objFrom[0])
+                                to.o.setData('y', objFrom[1])
+                                to.o.setData('t', mock5x5[objFrom[1]][objFrom[0]])
+                            })
+                        } else {
+                            let from = s.gete(x, y)
+                            from.o.x = x * boxWidth + 25
+                            from.o.y = -100
+                            let t = Phaser.Math.Between(1, 3)
+                            from.o.setFillStyle(colors[t], 1)
+                            from.t = t
+                            mock5x5[y][x] = t
+                            tweens.push({
+                                targets: from.o,
+                                x: x * boxWidth + 25,
+                                y: y * boxWidth + 50
+
+                            })
+                        }
+                    }
+                }
+                s.tweens.timeline({
+                    ease: "Sine.easeInOut",
+                    yoyo: false,
+                    loop: 0,
+                    duration: 30,
+                    tweens,
+                    onComplete: () => {
+                        emitter.emit('checkfild');
+                    }
+                })
+            }
+            else { hatMove = false }
+        }
+    }
+
+    check() {
+        let s = this
+        const destroyRect = (rect) => {
+            rect.o.setAlpha(0.1)
+        }
+        let hat = testFild(mock5x5, em => {
+            if (em.t != 0) {
+                if (em.n) {
+                    for (let y = em.y - em.count; y < em.y; y++) {
+                        let rect = s.gete(em.x, y)
+                        mock5x5[y][em.x] = 0
+                        destroyRect(rect)
+                    }
+                }
+                else {
+                    for (let x = em.x - em.count; x < em.x; x++) {
+                        let rect = s.gete(x, em.y)
+                        mock5x5[em.y][x] = 0
+                        destroyRect(rect)
+                    }
+                }
+            }
+        })
+        if (hat) emitter.emit('redrawfall');
+    }
+
     create() {
         let s = this
         s.selected = false
         const boxWidth = 50
         const colors = [0x6666ff, 0xff0000, 0x00ff00, 0x0000ff];
         this.scoreText = this.add.text(25, 12, ['0'])
+
+        emitter.on('redrawfall', this.redraw, this)
+        emitter.on('checkfild', this.check, this)
 
         this.input.on('pointerover', function (pointer, obj) {
             obj[0].setStrokeStyle(4, 0xefc53f);
@@ -62,7 +170,7 @@ export default class MainScene extends Phaser.Scene {
                         e.o.setAlpha(1)
                     }
                     else {
-                        e.o.setAlpha(0)
+                        e.o.setAlpha(0.1)
                     }
                 })
                 if (s.selected != [r.data.values.x, r.data.values.y]) {
@@ -71,14 +179,23 @@ export default class MainScene extends Phaser.Scene {
                         moveGems(mock5x5, from, to, (mock, objFrom, objTo) => {
                             let from = g.gete(objFrom[0], objFrom[1])
                             let to = g.gete(objTo[0], objTo[1])
-                            const destroyRect = (rect) => {
-                                rect.o.setAlpha(0.1)
-                            }
                             s.tweens.timeline({
                                 ease: "Sine.easeInOut",
                                 yoyo: false,
                                 loop: 0,
                                 duration: 100,
+                                tweens: [
+                                    {
+                                        targets: from.o,
+                                        x: to.o.x,
+                                        y: to.o.y
+                                    },
+                                    {
+                                        targets: to.o,
+                                        x: from.o.x,
+                                        y: from.o.y
+                                    }
+                                ],
                                 onComplete: () => {
                                     from.x = objTo[0]
                                     from.y = objTo[1]
@@ -90,77 +207,8 @@ export default class MainScene extends Phaser.Scene {
                                     to.o.setData('x', objFrom[0])
                                     to.o.setData('y', objFrom[1])
                                     to.o.setData('t', mock[objFrom[1]][objFrom[0]])
-
-                                    testFild(mock5x5, em => {
-                                        if (em.t != 0) {
-                                            if (em.n) {
-                                                for (let y = em.y - em.count; y < em.y; y++) {
-                                                    let rect = s.gete(em.x, y)
-                                                    mock5x5[y][em.x] = 0
-                                                    destroyRect(rect)
-                                                }
-                                            }
-                                            else {
-                                                for (let x = em.x - em.count; x < em.x; x++) {
-                                                    let rect = s.gete(x, em.y)
-                                                    mock5x5[em.y][x] = 0
-                                                    destroyRect(rect)
-                                                }
-                                            }
-                                        }
-                                    })
-                                    let ems = fallGemes(mock5x5)
-                                    for (let x = 0; x < mock5x5[0].length; x++) {
-                                        for (let y = mock5x5.length - 1; y > ems.hat[x].length; y--) {
-                                            if (ems.hat[x].length > 0) {
-                                                let gem = ems.hat[x].pop()
-                                                moveGems(mock5x5, [gem.x, gem.y], [x, y], (mock, objFrom, objTo) => {
-                                                    let from = g.gete(objFrom[0], objFrom[1])
-                                                    let to = g.gete(objTo[0], objTo[1])
-                                                    s.tweens.timeline({
-                                                        ease: "Sine.easeInOut",
-                                                        yoyo: false,
-                                                        loop: 0,
-                                                        duration: 200,
-                                                        tweens: [
-                                                            {
-                                                                targets: from.o,
-                                                                x: to.o.x,
-                                                                y: to.o.y
-                                                            }, {
-                                                                targets: to.o,
-                                                                x: from.o.x,
-                                                                y: from.o.y
-                                                            }],
-                                                        onComplete: () => {
-                                                            from.x = objTo[0]
-                                                            from.y = objTo[1]
-                                                            from.o.setData('x', objTo[0])
-                                                            from.o.setData('y', objTo[1])
-                                                            from.o.setData('t', mock[objTo[1]][objTo[0]])
-                                                            to.x = objFrom[0]
-                                                            to.y = objFrom[1]
-                                                            to.o.setData('x', objFrom[0])
-                                                            to.o.setData('y', objFrom[1])
-                                                            to.o.setData('t', mock[objFrom[1]][objFrom[0]])
-                                                        }
-                                                    })
-                                                })
-                                            }
-                                        }
-                                    }
-                                    console.log(mock5x5)
-                                },
-                                tweens: [
-                                    {
-                                        targets: from.o,
-                                        x: to.o.x,
-                                        y: to.o.y
-                                    }, {
-                                        targets: to.o,
-                                        x: from.o.x,
-                                        y: from.o.y
-                                    }]
+                                    emitter.emit('checkfild');
+                                }
                             });
                         })
                     }
