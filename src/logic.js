@@ -13,9 +13,6 @@ export const mock5x5 = [
     [0, 0, 0, 0, 0, 0, 0]
 ]
 
-export function makeNew(mock) {
-
-}
 
 export function moveGems(mock, objFrom, objTo, fn = (mock, objFrom, objTo) => console.log) {
     const cords = (x, y) => mock[y][x]
@@ -28,13 +25,27 @@ export function moveGems(mock, objFrom, objTo, fn = (mock, objFrom, objTo) => co
 
 export function testFild(mock, fn = (ob) => console.log) {
     const cords = (x, y) => mock[y][x]
+    const payload = []
+    const verts = (em) => {
+        for (let y = em.y - em.count; y < em.y; y++) {
+            let rect = s.gete(em.x, y)
+            mock[y][em.x] = 0
+            payload.push(rect)
+        }
+    }
+    const horis = (em) => {
+        for (let x = em.x - em.count; x < em.x; x++) {
+            let rect = s.gete(x, em.y)
+            mock[em.y][x] = 0
+            payload.push(rect)
+        }
+    }
     const height = mock.length
     const weight = mock[0].length
     let fromX = 0
     let fromY = 0
     let toX = weight
     let toY = height
-    const payload = []
     for (let y = fromY; y < toY; y++) {
         let fr = cords(fromX, y)
         let count = 1

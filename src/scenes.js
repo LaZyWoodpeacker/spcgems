@@ -50,6 +50,8 @@ export default class MainScene extends Phaser.Scene {
                                     targets: from.o,
                                     x: x * boxWidth + 25,
                                     y: y * boxWidth + 50,
+                                    alpha: 1,
+                                    offset: 0
                                 })
                                 from.x = objTo[0]
                                 from.y = objTo[1]
@@ -72,9 +74,10 @@ export default class MainScene extends Phaser.Scene {
                             mock5x5[y][x] = t
                             tweens.push({
                                 targets: from.o,
+                                alpha: 1,
                                 x: x * boxWidth + 25,
-                                y: y * boxWidth + 50
-
+                                y: y * boxWidth + 50,
+                                offset: 10
                             })
                         }
                     }
@@ -83,7 +86,7 @@ export default class MainScene extends Phaser.Scene {
                     ease: "Sine.easeInOut",
                     yoyo: false,
                     loop: 0,
-                    duration: 30,
+                    duration: 300,
                     tweens,
                     onComplete: () => {
                         emitter.emit('checkfild');
@@ -96,8 +99,9 @@ export default class MainScene extends Phaser.Scene {
 
     check() {
         let s = this
+        let tweens = []
         const destroyRect = (rect) => {
-            rect.o.setAlpha(0.1)
+            // rect.o.setAlpha(0.1)
         }
         let hat = testFild(mock5x5, em => {
             if (em.t != 0) {
@@ -106,6 +110,11 @@ export default class MainScene extends Phaser.Scene {
                         let rect = s.gete(em.x, y)
                         mock5x5[y][em.x] = 0
                         destroyRect(rect)
+                        tweens.push({
+                            targets: rect.o,
+                            alpha: 0.1,
+                            offset: 0
+                        })
                     }
                 }
                 else {
@@ -113,11 +122,27 @@ export default class MainScene extends Phaser.Scene {
                         let rect = s.gete(x, em.y)
                         mock5x5[em.y][x] = 0
                         destroyRect(rect)
+                        tweens.push({
+                            targets: rect.o,
+                            alpha: 0.1,
+                            offset: 0
+                        })
                     }
                 }
             }
         })
-        if (hat) emitter.emit('redrawfall');
+        if (hat) {
+            s.tweens.timeline({
+                ease: "Cubic.easeOut",
+                yoyo: false,
+                loop: 0,
+                duration: 200,
+                tweens,
+                onComplete: () => {
+                    emitter.emit('redrawfall')
+                }
+            })
+        }
     }
 
     create() {
@@ -141,20 +166,18 @@ export default class MainScene extends Phaser.Scene {
             let g = this.scene
             const drawPosable = (sel, redraw = false) => {
                 let moves = testMoves(mock5x5, sel[0], sel[1])
-                if (redraw) {
-                    if (!Object.values(moves.moves).every(e => e == false)) {
-                        if (moves.moves.right) {
-                            g.gete(sel[0] + 1, sel[1]).o.setAlpha(0.5)
-                        }
-                        if (moves.moves.left) {
-                            g.gete(sel[0] - 1, sel[1]).o.setAlpha(0.5)
-                        }
-                        if (moves.moves.up) {
-                            g.gete(sel[0], sel[1] - 1).o.setAlpha(0.5)
-                        }
-                        if (moves.moves.down) {
-                            g.gete(sel[0], sel[1] + 1).o.setAlpha(0.5)
-                        }
+                if (!Object.values(moves.moves).every(e => e == false)) {
+                    if (moves.moves.right) {
+                        g.gete(sel[0] + 1, sel[1]).o.setAlpha(0.5)
+                    }
+                    if (moves.moves.left) {
+                        g.gete(sel[0] - 1, sel[1]).o.setAlpha(0.5)
+                    }
+                    if (moves.moves.up) {
+                        g.gete(sel[0], sel[1] - 1).o.setAlpha(0.5)
+                    }
+                    if (moves.moves.down) {
+                        g.gete(sel[0], sel[1] + 1).o.setAlpha(0.5)
                     }
                 }
                 return moves
@@ -240,6 +263,7 @@ export default class MainScene extends Phaser.Scene {
             if (c == 0) rect.setAlpha(0)
             this.tweens.add({
                 targets: rect,
+                alpha: { from: 0, to: 1 },
                 x: x * boxWidth + 25,
                 y: y * boxWidth + 50,
                 duration: 300,
