@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import MainScene from './scenes'
+import WonScene from './wonscene'
 
 const config = {
   type: Phaser.AUTO,
@@ -17,7 +18,7 @@ const config = {
       gravity: { y: 200 }
     }
   },
-  scene: [new MainScene()]
+  scene: [MainScene, WonScene]
 };
 
 var game = new Phaser.Game(config);

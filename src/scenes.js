@@ -3,16 +3,21 @@ import { makeFild, testMoves, testFild, moveGems, fallGemes } from './logic'
 import { mock3x3, mock5x5 } from './moks'
 
 const emitter = new Phaser.Events.EventEmitter()
-let bisy, scoreText, score, timer
+const colors = [0x6666ff, 0xff0000, 0x00ff00, 0x0000ff, 0xffff00];
+let scoreMax = 10
+let scoreText, score, timer
 export default class MainScene extends Phaser.Scene {
     constructor() {
-        super()
+        super('MainScene')
     }
 
     preload() {
 
     }
 
+    getScore() {
+        return score
+    }
 
     gete(x, y) {
         return this.s.find(e => e.x == x && e.y == y)
@@ -33,10 +38,10 @@ export default class MainScene extends Phaser.Scene {
     }
 
     redraw() {
+        timer.paused = true
         let s = this
         let hatMove = true
         const boxWidth = 50
-        const colors = [0x6666ff, 0xff0000, 0x00ff00, 0x0000ff];
         while (hatMove) {
             let ems = fallGemes(mock5x5)
             let tweens = []
@@ -70,7 +75,7 @@ export default class MainScene extends Phaser.Scene {
                             let from = s.gete(x, y)
                             from.o.x = x * boxWidth + 25
                             from.o.y = -100
-                            let t = Phaser.Math.Between(1, 3)
+                            let t = Phaser.Math.Between(1, 4)
                             from.o.setFillStyle(colors[t], 1)
                             from.t = t
                             mock5x5[y][x] = t
@@ -92,14 +97,21 @@ export default class MainScene extends Phaser.Scene {
                     tweens,
                     onComplete: () => {
                         emitter.emit('checkfild');
+                        timer.paused = false
                     }
                 })
             }
-            else { hatMove = false }
+            else {
+                if (score > scoreMax) {
+                    emitter.emit('endgame')
+                }
+                hatMove = false
+            }
         }
     }
 
     check() {
+        timer.paused = true
         const s = this
         let tweens = []
         let hat = testFild(mock5x5)
@@ -125,19 +137,20 @@ export default class MainScene extends Phaser.Scene {
                 }
             })
         }
-        scoreText.setText([score])
     }
 
     create() {
         let s = this
         s.selected = false
         const boxWidth = 50
-        const colors = [0x6666ff, 0xff0000, 0x00ff00, 0x0000ff];
         score = 0
         scoreText = this.add.text(25, 12, ['0'])
 
         emitter.on('redrawfall', this.redraw, this)
         emitter.on('checkfild', this.check, this)
+        emitter.on('endgame', em => {
+            this.scene.start('WonScene', score)
+        }, this)
 
         this.input.on('pointerover', function (pointer, obj) {
             obj[0].setStrokeStyle(4, 0xefc53f);
@@ -148,6 +161,7 @@ export default class MainScene extends Phaser.Scene {
         this.input.on('gameobjectdown', function (pointer, obj) {
             let r = obj
             let g = this.scene
+            if (timer.paused) return
             const drawPosable = (sel) => {
                 let moves = testMoves(mock5x5, sel[0], sel[1])
                 if (!Object.values(moves.moves).every(e => e == false)) {
@@ -251,9 +265,22 @@ export default class MainScene extends Phaser.Scene {
                 onComplete: () => {
                     // rect.text = this.add.text(rect.x + 10, rect.y + 10, x + ',' + y)
                     //     .setOrigin(0)
+                    timer.paused = false
                 },
             });
             return rect
         })
+
+        timer = this.time.addEvent({ delay: 1000, repeat: 50 })
+        timer.paused = true
+        this.time.delayedCall(3000, () => {
+            emitter.emit('gameover')
+            console.log(timer)
+        }, [], this);
+    }
+
+    update() {
+
+        scoreText.setText([score + ' ' + timer.paused, timer.getProgress().toString()])
     }
 }
