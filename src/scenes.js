@@ -1,7 +1,9 @@
 import Phaser from "phaser";
-import { mock3x3, mock5x5, test, makeFild, testMoves, testFild, moveGems, scoreFild, fallGemes, makeNew } from './logic'
+import { makeFild, testMoves, testFild, moveGems, fallGemes } from './logic'
+import { mock3x3, mock5x5 } from './moks'
 
 const emitter = new Phaser.Events.EventEmitter()
+let bisy, scoreText, score, timer
 export default class MainScene extends Phaser.Scene {
     constructor() {
         super()
@@ -98,38 +100,18 @@ export default class MainScene extends Phaser.Scene {
     }
 
     check() {
-        let s = this
+        const s = this
         let tweens = []
-        const destroyRect = (rect) => {
-            // rect.o.setAlpha(0.1)
-        }
-        let hat = testFild(mock5x5, em => {
-            if (em.t != 0) {
-                if (em.n) {
-                    for (let y = em.y - em.count; y < em.y; y++) {
-                        let rect = s.gete(em.x, y)
-                        mock5x5[y][em.x] = 0
-                        destroyRect(rect)
-                        tweens.push({
-                            targets: rect.o,
-                            alpha: 0.1,
-                            offset: 0
-                        })
-                    }
-                }
-                else {
-                    for (let x = em.x - em.count; x < em.x; x++) {
-                        let rect = s.gete(x, em.y)
-                        mock5x5[em.y][x] = 0
-                        destroyRect(rect)
-                        tweens.push({
-                            targets: rect.o,
-                            alpha: 0.1,
-                            offset: 0
-                        })
-                    }
-                }
-            }
+        let hat = testFild(mock5x5)
+        hat.forEach((gems, idx) => {
+            if (gems.t == 1) score += gems.pload.length
+            gems.pload.forEach(em => {
+                tweens.push({
+                    targets: s.gete(em[0], em[1]).o,
+                    alpha: { from: 1, to: 0 },
+                    offset: 100 * idx
+                })
+            })
         })
         if (hat) {
             s.tweens.timeline({
@@ -143,6 +125,7 @@ export default class MainScene extends Phaser.Scene {
                 }
             })
         }
+        scoreText.setText([score])
     }
 
     create() {
@@ -150,7 +133,8 @@ export default class MainScene extends Phaser.Scene {
         s.selected = false
         const boxWidth = 50
         const colors = [0x6666ff, 0xff0000, 0x00ff00, 0x0000ff];
-        this.scoreText = this.add.text(25, 12, ['0'])
+        score = 0
+        scoreText = this.add.text(25, 12, ['0'])
 
         emitter.on('redrawfall', this.redraw, this)
         emitter.on('checkfild', this.check, this)
@@ -164,7 +148,7 @@ export default class MainScene extends Phaser.Scene {
         this.input.on('gameobjectdown', function (pointer, obj) {
             let r = obj
             let g = this.scene
-            const drawPosable = (sel, redraw = false) => {
+            const drawPosable = (sel) => {
                 let moves = testMoves(mock5x5, sel[0], sel[1])
                 if (!Object.values(moves.moves).every(e => e == false)) {
                     if (moves.moves.right) {
@@ -189,12 +173,7 @@ export default class MainScene extends Phaser.Scene {
             }
             else {
                 g.s.forEach(e => {
-                    if (e.t != 0) {
-                        e.o.setAlpha(1)
-                    }
-                    else {
-                        e.o.setAlpha(0.1)
-                    }
+                    e.o.setAlpha(1)
                 })
                 if (s.selected != [r.data.values.x, r.data.values.y]) {
                     let moves = drawPosable(s.selected)
@@ -250,7 +229,7 @@ export default class MainScene extends Phaser.Scene {
                     s.selected = false
                 }
             }
-            g.scoreText.setText([(s.selected[0]) + ',' + (s.selected[1]), (r.data.values.x) + ',' + (r.data.values.y)])
+            // scoreText.setText([(s.selected[0]) + ',' + (s.selected[1]), (r.data.values.x) + ',' + (r.data.values.y)])
         })
         this.s = makeFild(mock5x5, (x, y, c) => {
             let rect = this.add.rectangle(Phaser.Math.Between(-500, 500), Phaser.Math.Between(-500, 500), boxWidth - 2, boxWidth - 2, colors[c]);
@@ -260,7 +239,6 @@ export default class MainScene extends Phaser.Scene {
                 .setData("x", x)
                 .setData("y", y)
                 .setData("t", c)
-            if (c == 0) rect.setAlpha(0)
             this.tweens.add({
                 targets: rect,
                 alpha: { from: 0, to: 1 },
@@ -271,8 +249,8 @@ export default class MainScene extends Phaser.Scene {
                 yoyo: false,
                 loop: 0,
                 onComplete: () => {
-                    rect.text = this.add.text(rect.x + 10, rect.y + 10, x + ',' + y)
-                        .setOrigin(0)
+                    // rect.text = this.add.text(rect.x + 10, rect.y + 10, x + ',' + y)
+                    //     .setOrigin(0)
                 },
             });
             return rect

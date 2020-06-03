@@ -1,18 +1,12 @@
-export const mock3x3 = [
-    [1, 3, 1],
-    [1, 3, 1],
-    [3, 1, 3]
-]
-export const mock5x5 = [
-    [1, 2, 2, 1, 2, 2, 3],
-    [1, 0, 2, 0, 0, 0, 0],
-    [2, 0, 0, 0, 0, 2, 0],
-    [3, 0, 0, 0, 0, 1, 0],
-    [0, 0, 0, 0, 0, 3, 0],
-    [0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0]
-]
-
+export function makeFild(mock, makeobj = () => 1) {
+    let payload = [];
+    for (let y = 0; y < mock.length; y++) {
+        for (let x = 0; x < mock[0].length; x++) {
+            payload.push({ x, y, t: mock[y][x], o: makeobj(x, y, mock[y][x]) })
+        }
+    }
+    return payload
+}
 
 export function moveGems(mock, objFrom, objTo, fn = (mock, objFrom, objTo) => console.log) {
     const cords = (x, y) => mock[y][x]
@@ -26,19 +20,37 @@ export function moveGems(mock, objFrom, objTo, fn = (mock, objFrom, objTo) => co
 export function testFild(mock, fn = (ob) => console.log) {
     const cords = (x, y) => mock[y][x]
     const payload = []
+    const compare = (arr1) => {
+        let res = { res: false, idx: 0 }
+        payload.forEach((ems, idx) => {
+            ems.pload.forEach(em2 => {
+                arr1.pload.forEach(s => {
+                    if (s[0] == em2[0] && s[0] == em2[0] && ems.t == arr1.t) {
+                        res = { res: true, idx: idx }
+                    }
+                })
+            })
+        })
+        return res
+    }
     const verts = (em) => {
+        let pload = []
         for (let y = em.y - em.count; y < em.y; y++) {
-            let rect = s.gete(em.x, y)
-            mock[y][em.x] = 0
-            payload.push(rect)
+            pload.push([em.x, y])
+        }
+        let hat = compare({ pload, t: em.t })
+        if (hat.res) {
+            payload[hat.idx].pload = payload[hat.idx].pload.concat(pload)
+        } else {
+            payload.push({ pload, t: em.t })
         }
     }
     const horis = (em) => {
+        let pload = []
         for (let x = em.x - em.count; x < em.x; x++) {
-            let rect = s.gete(x, em.y)
-            mock[em.y][x] = 0
-            payload.push(rect)
+            pload.push([x, em.y])
         }
+        payload.push({ pload, t: em.t })
     }
     const height = mock.length
     const weight = mock[0].length
@@ -57,6 +69,7 @@ export function testFild(mock, fn = (ob) => console.log) {
             else {
                 if (count > 2) {
                     fn({ n: false, y, x, count, t: fr })
+                    if (fr != 0) horis({ n: false, y, x, count, t: fr })
                 }
                 fr = frto
                 count = 1
@@ -64,6 +77,7 @@ export function testFild(mock, fn = (ob) => console.log) {
         }
         if (count > 2) {
             fn({ n: false, y, x: toX, count, t: fr })
+            if (fr != 0) horis({ n: false, y, x: toX, count, t: fr })
         }
     }
     for (let x = fromX; x < toX; x++) {
@@ -77,6 +91,7 @@ export function testFild(mock, fn = (ob) => console.log) {
             else {
                 if (count > 2) {
                     fn({ n: true, x, y, count, t: fr })
+                    if (fr != 0) verts({ n: true, x, y, count, t: fr })
                 }
                 fr = frto
                 count = 1
@@ -84,14 +99,17 @@ export function testFild(mock, fn = (ob) => console.log) {
         }
         if (count > 2) {
             fn({ n: true, x, y: toY, count, t: fr })
+            if (fr != 0) verts({ n: true, x, y: toY, count, t: fr })
         }
     }
-    return payload.filter(e => e.t != 0)
+    payload.forEach(gems => {
+        gems.pload.forEach(em => {
+            mock[em[1]][em[0]] = 0
+        })
+    })
+    return payload
 }
 
-export function scoreFild(mock, fn = (ob) => console.log) {
-    return fn(mock)
-}
 
 function testMove(mock, fromX, fromY, toX, toY, x1, y1, x2, y2) {
     const cords = (x, y) => {
@@ -141,16 +159,6 @@ function testMove(mock, fromX, fromY, toX, toY, x1, y1, x2, y2) {
         }
     }
     return (payload.filter(e => e.t != 0).length > 0)
-}
-
-export function makeFild(mock, makeobj = () => 1) {
-    let payload = [];
-    for (let y = 0; y < mock.length; y++) {
-        for (let x = 0; x < mock[0].length; x++) {
-            payload.push({ x, y, t: mock[y][x], o: makeobj(x, y, mock[y][x]) })
-        }
-    }
-    return payload
 }
 
 export function testMoves(mock, x, y, fn = (type, x, y, c) => console.log) {
