@@ -24,9 +24,9 @@ export function testFild(mock, fn = (ob) => console.log) {
         let res = { res: false, idx: 0 }
         payload.forEach((ems, idx) => {
             ems.pload.forEach(em2 => {
-                arr1.pload.forEach(s => {
-                    if (s[0] == em2[0] && s[0] == em2[0] && ems.t == arr1.t) {
-                        res = { res: true, idx: idx }
+                arr1.pload.forEach((s, removeindex) => {
+                    if (s[0] == em2[0] && s[1] == em2[1] && ems.t == arr1.t) {
+                        res = { res: true, idx: idx, removeindex }
                     }
                 })
             })
@@ -40,6 +40,7 @@ export function testFild(mock, fn = (ob) => console.log) {
         }
         let hat = compare({ pload, t: em.t })
         if (hat.res) {
+            pload.splice(hat.removeindex, 1)
             payload[hat.idx].pload = payload[hat.idx].pload.concat(pload)
         } else {
             payload.push({ pload, t: em.t })

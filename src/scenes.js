@@ -4,11 +4,13 @@ import { mock3x3, mock5x5 } from './moks'
 
 const emitter = new Phaser.Events.EventEmitter()
 const colors = [0x6666ff, 0xff0000, 0x00ff00, 0x0000ff, 0xffff00];
-let scoreMax = 10
+let scoreMax = 9
+let gameTime = 75
+let timerText = 0
 let scoreText, score, timer
 export default class MainScene extends Phaser.Scene {
     constructor() {
-        super('MainScene')
+        super({ key: 'MainScene', active: true })
     }
 
     preload() {
@@ -102,7 +104,7 @@ export default class MainScene extends Phaser.Scene {
                 })
             }
             else {
-                if (score > scoreMax) {
+                if (score >= scoreMax) {
                     emitter.emit('endgame')
                 }
                 hatMove = false
@@ -139,6 +141,11 @@ export default class MainScene extends Phaser.Scene {
         }
     }
 
+    wonScene() {
+        this.cameras.main.fadeOut(2000, 0, 0, 0);
+        this.scene.launch('WonScene', score)
+    }
+
     create() {
         let s = this
         s.selected = false
@@ -148,9 +155,7 @@ export default class MainScene extends Phaser.Scene {
 
         emitter.on('redrawfall', this.redraw, this)
         emitter.on('checkfild', this.check, this)
-        emitter.on('endgame', em => {
-            this.scene.start('WonScene', score)
-        }, this)
+        emitter.once('endgame', this.wonScene, this)
 
         this.input.on('pointerover', function (pointer, obj) {
             obj[0].setStrokeStyle(4, 0xefc53f);
@@ -263,24 +268,33 @@ export default class MainScene extends Phaser.Scene {
                 yoyo: false,
                 loop: 0,
                 onComplete: () => {
-                    // rect.text = this.add.text(rect.x + 10, rect.y + 10, x + ',' + y)
-                    //     .setOrigin(0)
+                    rect.text = this.add.text(rect.x + 10, rect.y + 10, x + ',' + y)
+                        .setOrigin(0)
                     timer.paused = false
                 },
             });
             return rect
         })
-
-        timer = this.time.addEvent({ delay: 1000, repeat: 50 })
+        timer = this.time.addEvent({
+            delay: 1000, repeat: gameTime, callback: () => {
+                timerText = this.getMinutes()
+                if (timer.repeatCount == 0) {
+                    emitter.emit('endgame')
+                }
+            }
+        })
+        timerText = this.getMinutes()
         timer.paused = true
-        this.time.delayedCall(3000, () => {
-            emitter.emit('gameover')
-            console.log(timer)
-        }, [], this);
+    }
+
+    getMinutes() {
+        let secondsall = timer.repeatCount
+        var minutes = Math.floor(secondsall / 60);
+        var seconds = secondsall - minutes * 60;
+        return (secondsall > 59) ? `${minutes}:${seconds}` : seconds
     }
 
     update() {
-
-        scoreText.setText([score + ' ' + timer.paused, timer.getProgress().toString()])
+        scoreText.setText([score, timerText])
     }
 }
