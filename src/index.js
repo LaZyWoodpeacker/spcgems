@@ -9,7 +9,7 @@ const config = {
   height: 450,
   backgroundColor: '#2d2d2d',
   scale: {
-    // mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH
   },
   physics: {
