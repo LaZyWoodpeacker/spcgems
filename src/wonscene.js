@@ -13,8 +13,7 @@ export default class WonScene extends Phaser.Scene {
     }
     create() {
         scene = this
-        console.log('create')
-        score = this.scene.get('MainScene').getScore;
+        score = this.scene.get('SpcGemsScene').getScore;
 
         bg = this.add.rectangle(0, 0, 200, 200, 0x6666ff)
             .setStrokeStyle(2, 0x1a65ac)
@@ -35,7 +34,7 @@ export default class WonScene extends Phaser.Scene {
         Phaser.Display.Align.In.BottomCenter(button, bg, 0, -10)
         Phaser.Display.Align.In.Center(buttonText, button)
         this.input.once('pointerup', function () {
-            scene.scene.start('MainScene')
+            scene.scene.start('SpcGemsScene')
         })
         this.add.tween({
             targets: banner,

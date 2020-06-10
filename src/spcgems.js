@@ -1,65 +1,103 @@
 import Phaser from "phaser";
-import { makeFild, testMoves, testFild, moveGems, fallGemes } from './logic'
 import { mock3x3, mock5x5 } from './moks'
+import { makeFild, testMoves, testFild, moveGems, fallGemes } from './logic'
 
+export const conf = {
+    emitter: new Phaser.Events.EventEmitter(),
+    colors: [0x6666ff, 0xff0000, 0x00ff00, 0x0000ff, 0xffff00],
+    scoreMax: 90,
+    gameTime: 60 * 2,
+    timerText: '',
+    scoreText: 0,
+    score: 0,
+    timer: null,
+    mock: null,
+    scene: null,
+    max: 5,
+    counted: [1, 2]
+}
 
-const emitter = new Phaser.Events.EventEmitter()
-const colors = [0x6666ff, 0xff0000, 0x00ff00, 0x0000ff, 0xffff00];
-let scoreMax = 9
-let gameTime = 75
-let timerText = 0
-let scoreText, score, timer
-export default class MainScene extends Phaser.Scene {
+export class Gem extends Phaser.GameObjects.Container {
+    constructor(scene, x = 0, y = 0) {
+        super(scene, x, y)
+        this.rect = scene.add.rectangle(0, 0, 100, 100)
+            .setOrigin(0)
+            .setStrokeStyle(0, 0x1a65ac)
+        this.sprite = scene.add.sprite(0, 0, 'gems')
+            .setOrigin(0)
+        this.add([this.rect, this.sprite])
+            .setInteractive(this.rect, Phaser.Geom.Rectangle.Contains)
+        this.on('pointerover', function () {
+            this.setTint(0x44ff44);
+        });
+        this.on('pointerout', function () {
+            this.clearTint();
+        });
+        scene.add.existing(this)
+    }
+
+    setTint(number) {
+        this.sprite.setTint(number)
+        this.rect.setStrokeStyle(4, number)
+        return this
+    }
+
+    clearTint() {
+        this.sprite.clearTint()
+        this.rect.setStrokeStyle(0, 0x1a65ac)
+        return this
+    }
+
+    setSpr(num) {
+        this.sprite.setFrame(num)
+        return this
+    }
+}
+
+export default class SpcGemsScene extends Phaser.Scene {
     constructor() {
-        super({ key: 'MainScene', active: false })
+        super({ key: 'SpcGemsScene', active: true })
     }
 
     preload() {
+        this.load.spritesheet('gems', 'assets/sprites.png', { frameWidth: 100, frameHeight: 100 });
+    }
 
+    getMinutes() {
+        let secondsall = conf.timer.repeatCount
+        var minutes = Math.floor(secondsall / 60);
+        var seconds = secondsall - minutes * 60;
+        return (secondsall > 59) ? `${minutes}:${seconds}` : seconds
     }
 
     getScore() {
-        return score
+        return conf.score
     }
 
     gete(x, y) {
         return this.s.find(e => e.x == x && e.y == y)
     }
 
-    printField(mock, fn = (em) => em.t) {
-        const payload = []
-        for (let y = 0; y < mock.length; y++) {
-            let horis = []
-            for (let x = 0; x < mock[0].length; x++) {
-                let em = this.gete(x, y)
-                horis.push(fn(em))
-            }
-            payload.push(horis)
-        }
-        console.log(payload)
-        return payload
-    }
-
     redraw() {
-        timer.paused = true
+        conf.timer.paused = true
         let s = this
         let hatMove = true
         const boxWidth = 50
         while (hatMove) {
-            let ems = fallGemes(mock5x5)
+            let ems = fallGemes(conf.mock)
             let tweens = []
             if (ems.hatMove) {
-                for (let x = 0; x < mock5x5[0].length; x++) {
-                    for (let y = mock5x5.length - 1; y > -1; y--) {
+                for (let x = 0; x < conf.mock[0].length; x++) {
+                    for (let y = conf.mock.length - 1; y > -1; y--) {
                         if (ems.hat[x].length > 0) {
                             let gem = ems.hat[x].pop()
-                            moveGems(mock5x5, [gem.x, gem.y], [x, y], (mock5x5, objFrom, objTo) => {
+                            moveGems(conf.mock, [gem.x, gem.y], [x, y], (mock, objFrom, objTo) => {
                                 let from = s.gete(objFrom[0], objFrom[1])
                                 let to = s.gete(objTo[0], objTo[1])
                                 tweens.push({
                                     targets: from.o,
-                                    x: x * boxWidth + 25,
-                                    y: y * boxWidth + 50,
+                                    x: x * 100,
+                                    y: y * 100 + 50,
                                     alpha: 1,
                                     offset: 0
                                 })
@@ -67,26 +105,27 @@ export default class MainScene extends Phaser.Scene {
                                 from.y = objTo[1]
                                 from.o.setData('x', objTo[0])
                                 from.o.setData('y', objTo[1])
-                                from.o.setData('t', mock5x5[objTo[1]][objTo[0]])
+                                from.o.setData('t', mock[objTo[1]][objTo[0]])
                                 to.x = objFrom[0]
                                 to.y = objFrom[1]
                                 to.o.setData('x', objFrom[0])
                                 to.o.setData('y', objFrom[1])
-                                to.o.setData('t', mock5x5[objFrom[1]][objFrom[0]])
+                                to.o.setData('t', mock[objFrom[1]][objFrom[0]])
                             })
                         } else {
                             let from = s.gete(x, y)
-                            from.o.x = x * boxWidth + 25
+                            from.o.x = x * 100
                             from.o.y = -100
-                            let t = Phaser.Math.Between(1, 4)
-                            from.o.setFillStyle(colors[t], 1)
+                            let t = Phaser.Math.Between(1, conf.max)
+                            // from.o.setFillStyle(colors[t], 1)
+                            from.o.setSpr(t)
                             from.t = t
-                            mock5x5[y][x] = t
+                            conf.mock[y][x] = t
                             tweens.push({
                                 targets: from.o,
                                 alpha: 1,
-                                x: x * boxWidth + 25,
-                                y: y * boxWidth + 50,
+                                x: x * 100,
+                                y: y * 100 + 50,
                                 offset: 10
                             })
                         }
@@ -99,14 +138,14 @@ export default class MainScene extends Phaser.Scene {
                     duration: 300,
                     tweens,
                     onComplete: () => {
-                        emitter.emit('checkfild');
-                        timer.paused = false
+                        conf.emitter.emit('checkfild');
+                        conf.timer.paused = false
                     }
                 })
             }
             else {
-                if (score >= scoreMax) {
-                    emitter.emit('endgame')
+                if (conf.score >= conf.scoreMax) {
+                    conf.emitter.emit('endgame')
                 }
                 hatMove = false
             }
@@ -114,12 +153,12 @@ export default class MainScene extends Phaser.Scene {
     }
 
     check() {
-        timer.paused = true
+        conf.timer.paused = true
         const s = this
         let tweens = []
-        let hat = testFild(mock5x5)
+        let hat = testFild(conf.mock)
         hat.forEach((gems, idx) => {
-            if (gems.t == 1) score += gems.pload.length
+            if (conf.counted.includes(gems.t)) conf.score += gems.pload.length
             gems.pload.forEach(em => {
                 tweens.push({
                     targets: s.gete(em[0], em[1]).o,
@@ -136,7 +175,7 @@ export default class MainScene extends Phaser.Scene {
                 duration: 200,
                 tweens,
                 onComplete: () => {
-                    emitter.emit('redrawfall')
+                    conf.emitter.emit('redrawfall')
                 }
             })
         }
@@ -144,32 +183,27 @@ export default class MainScene extends Phaser.Scene {
 
     wonScene() {
         this.cameras.main.fadeOut(2000, 0, 0, 0);
-        this.scene.launch('WonScene', score)
+        this.scene.launch('WonScene', conf.score)
     }
 
     create() {
         let s = this
         s.selected = false
-        const boxWidth = 50
-        score = 0
-        scoreText = this.add.text(25, 12, ['0'])
 
-        emitter.on('redrawfall', this.redraw, this)
-        emitter.on('checkfild', this.check, this)
-        emitter.once('endgame', this.wonScene, this)
+        conf.scene = this
+        conf.scoreText = this.add.text(25, 12, ['0'])
+        conf.mock = mock5x5
+        conf.emitter.on('redrawfall', this.redraw, this)
+        conf.emitter.on('checkfild', this.check, this)
+        conf.emitter.once('endgame', this.wonScene, this)
+        conf.score = 0
 
-        this.input.on('pointerover', function (pointer, obj) {
-            obj[0].setStrokeStyle(4, 0xefc53f);
-        });
-        this.input.on('pointerout', function (event, obj) {
-            obj[0].setStrokeStyle();
-        });
         this.input.on('gameobjectdown', function (pointer, obj) {
             let r = obj
             let g = this.scene
-            if (timer.paused) return
+            if (conf.timer.paused) return
             const drawPosable = (sel) => {
-                let moves = testMoves(mock5x5, sel[0], sel[1])
+                let moves = testMoves(conf.mock, sel[0], sel[1])
                 if (!Object.values(moves.moves).every(e => e == false)) {
                     if (moves.moves.right) {
                         g.gete(sel[0] + 1, sel[1]).o.setAlpha(0.5)
@@ -198,7 +232,7 @@ export default class MainScene extends Phaser.Scene {
                 if (s.selected != [r.data.values.x, r.data.values.y]) {
                     let moves = drawPosable(s.selected)
                     const swap = (from, to) => {
-                        moveGems(mock5x5, from, to, (mock, objFrom, objTo) => {
+                        moveGems(conf.mock, from, to, (mock, objFrom, objTo) => {
                             let from = g.gete(objFrom[0], objFrom[1])
                             let to = g.gete(objTo[0], objTo[1])
                             s.tweens.timeline({
@@ -229,7 +263,7 @@ export default class MainScene extends Phaser.Scene {
                                     to.o.setData('x', objFrom[0])
                                     to.o.setData('y', objFrom[1])
                                     to.o.setData('t', mock[objFrom[1]][objFrom[0]])
-                                    emitter.emit('checkfild');
+                                    conf.emitter.emit('checkfild');
                                 }
                             });
                         })
@@ -249,53 +283,45 @@ export default class MainScene extends Phaser.Scene {
                     s.selected = false
                 }
             }
-            // scoreText.setText([(s.selected[0]) + ',' + (s.selected[1]), (r.data.values.x) + ',' + (r.data.values.y)])
         })
-        this.s = makeFild(mock5x5, (x, y, c) => {
-            let rect = this.add.rectangle(Phaser.Math.Between(-500, 500), Phaser.Math.Between(-500, 500), boxWidth - 2, boxWidth - 2, colors[c]);
-            rect
-                .setOrigin(0)
-                .setInteractive()
+
+        this.s = makeFild(conf.mock, (x, y, c) => {
+            let conte = new Gem(this, Phaser.Math.Between(-500, 500), Phaser.Math.Between(-500, 500))
+                .setSpr(c)
                 .setData("x", x)
                 .setData("y", y)
                 .setData("t", c)
             this.tweens.add({
-                targets: rect,
+                targets: conte,
                 alpha: { from: 0, to: 1 },
-                x: x * boxWidth + 25,
-                y: y * boxWidth + 50,
+                x: x * 100,
+                y: y * 100 + 50,
                 duration: 300,
                 ease: "Sine.easeInOut",
                 yoyo: false,
                 loop: 0,
                 onComplete: () => {
-                    rect.text = this.add.text(rect.x + 10, rect.y + 10, x + ',' + y)
-                        .setOrigin(0)
-                    timer.paused = false
-                },
-            });
-            return rect
+                    // conte.text = this.add.text(conte.x + 10, conte.y + 10, x + ',' + y)
+                    //     .setOrigin(0)
+                    conf.timer.paused = false
+                }
+            })
+            return conte
         })
-        timer = this.time.addEvent({
-            delay: 1000, repeat: gameTime, callback: () => {
-                timerText = this.getMinutes()
-                if (timer.repeatCount == 0) {
-                    emitter.emit('endgame')
+
+        conf.timer = this.time.addEvent({
+            delay: 1000, repeat: conf.gameTime, callback: () => {
+                conf.timerText = this.getMinutes()
+                if (conf.timer.repeatCount == 0) {
+                    conf.emitter.emit('endgame')
                 }
             }
         })
-        timerText = this.getMinutes()
-        timer.paused = true
-    }
-
-    getMinutes() {
-        let secondsall = timer.repeatCount
-        var minutes = Math.floor(secondsall / 60);
-        var seconds = secondsall - minutes * 60;
-        return (secondsall > 59) ? `${minutes}:${seconds}` : seconds
+        conf.timerText = this.getMinutes()
+        conf.timer.paused = true
     }
 
     update() {
-        scoreText.setText([score, timerText])
+        conf.scoreText.setText([conf.score, conf.timerText])
     }
 }
